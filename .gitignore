@@ -8,5 +8,10 @@ __pycache__/
 htmlcov/
 *.log
 
+# 不属于本项目的目录：library-system 的 MySQL 数据目录（1.1GB），
+# 11-16 就落在这个路径下，早于本项目创建。不是本项目产物，不要 commit，
+# 也不要删——它是另一个项目的数据库。要清理请到 library-system 项目里去处理。
+library-system-db/
+
 # uv.lock 必须提交：锁住依赖版本，CI 和本机跑出来的才能是同一套东西。
 # bench/results/*.json 也提交：那是简历数字的唯一证据，不能"跑完就丢"。

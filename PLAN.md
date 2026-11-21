@@ -16,11 +16,12 @@
 | 单测 58 条 + ruff | ✅ **58 passed / clean** |
 | A~E 五组对照压测 | ✅ **数据已出（见第 1 节）** |
 | **对账脚本 + 四类差异测试** | ✅ **完成（见第 2 节）** |
-| CI（GitHub Actions） | ⏳ 配置写好了，没推过 |
-| Grafana | ⏳ 未开始 |
+| CI（GitHub Actions） | ✅ **已推 GitHub，lint + test 全绿（27s，PG service 跑通 25 条集成）** |
+| **Grafana 观测栈** | ✅ **6 块面板，指标链路已验通（见第 3 节）** |
+| README | ✅ 已补（投简历必需） |
 
 原计划两周的 S1~S3（打通真库 + 调通压测 + 出数据）在 11-19 一天内完成；
-S5 对账也在当天补完。
+S5 对账当天补完；11-21 补了 S4（git 仓库）、S7（Grafana）和 README。
 
 ---
 
@@ -115,23 +116,56 @@ demo 跑完会自己清理数据——对账最怕的不是漏报，是误报多
 
 ---
 
-## 3. 后续排期
+## 3. 观测栈（Grafana + Prometheus）
 
-| 阶段 | 时间 | 做什么 | 验收 | 工时 |
-| --- | --- | --- | --- | --- |
-| ~~S5 对账~~ | ~~11-22~~ | ~~应退 vs 实退，四类差异~~ | ✅ 已完成 | ~~3h~~ |
-| **S4 CI** | 11-20（五）30min | `git init` 推上 GitHub，看 Actions 里的 PG service 跑 25 条集成测试 | PR 绿灯 | 1h |
-| **S6 release 组** | 11-23~11-27 工作日各 30min | 跑 `--groups release`，测超时释放吞吐与残留 | 释放延迟 P99 < 2s | 1h |
-| **S7 Grafana** | 11-29（六）3h | QPS / 冲突率 / 释放延迟 / 队列积压四块面板 | 出图 | 3h |
-| **S8 收尾** | 12-06（六）3h | 候补端到端演示 + outbox 投递 + 补一份 20 行 README | 一条龙能跑 | 3h |
-| **S9 简历** | 12-07（日）2h | 用第 1 节的数字改写简历条目 + 准备 5 个追问 | — | 2h |
+```bash
+# 应用要绑 0.0.0.0：容器访问宿主机走的是 Docker 网关，绑 127.0.0.1 会连接被拒
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8001
 
-砍需求优先级：S7 Grafana < S6 release 组 < S8 候补。**S4/S5 都不能砍**——
-CI 是"项目能自动验证自己"的证据，对账是和别人的预约项目拉开差距的地方。
+docker compose --profile observability up -d
+# Prometheus http://localhost:9090  |  Grafana http://localhost:3000 (admin/admin)
+```
+
+六块面板（`deploy/grafana/dashboards/slot-booking.json`，已 provision，开箱即用）：
+
+| 面板 | 指标 | 看什么 |
+| --- | --- | --- |
+| 请求 QPS | `rate(http_requests_total[1m])` | 按路由拆分；409 也计入（它同样是服务端处理过的请求） |
+| 时段冲突率 | `booking_conflict_total / (created + conflict)` | 抢购场景冲到 90%+ 是正常的，说明约束在工作 |
+| 超时释放延迟 | `histogram_quantile(0.99, hold_release_delay_seconds_bucket)` | 持续 > 2s 说明 worker 追不上 |
+| 延迟队列积压 | `hold_queue_depth` | 一直涨 = worker 死了或干不过来，**最该配告警** |
+| 订单状态流转 | 创建/支付/释放/取消 四条速率线 | 创建远大于支付 = hold 在堆积 |
+| 数据库连接池 | `db_pool_checked_out` vs `db_pool_size` | 贴住上限 = 连接不够或事务太长 |
+
+已在 11-21 验证：Prometheus target `up`，Grafana 能读出 6 个面板，
+造 20 次抢同一时段 → 采集到 `booking_conflict_total=19`、`hold_queue_depth=19`。
+
+**踩的坑**：应用用默认的 `127.0.0.1` 起，Prometheus 报
+`dial tcp 192.168.65.254:8001: connect: connection refused`——容器走 Docker 网关，
+不是本机回环。必须 `--host 0.0.0.0`。
 
 ---
 
-## 4. 运行方式
+## 4. 后续排期
+
+| 阶段 | 时间 | 做什么 | 验收 | 工时 |
+| --- | --- | --- | --- | --- |
+| ~~S4 本地仓库~~ | ~~11-20~~ | ~~git init + 首次提交~~ | ✅ 已完成（2 次提交） | ~~1h~~ |
+| ~~S6 release 组~~ | ~~11-23~~ | ~~超时释放吞吐~~ | ✅ 55.2 单/秒 | ~~1h~~ |
+| ~~S7 Grafana~~ | ~~11-29~~ | ~~四块面板~~ | ✅ 6 块面板已验通 | ~~3h~~ |
+| ~~README~~ | ~~12-06~~ | ~~项目门面~~ | ✅ 已补 | ~~1h~~ |
+| ~~S8a 推 GitHub~~ | ~~11-21~~ | ~~建仓库 + push~~ | ✅ [kian399/slot-booking-service](https://github.com/kian399/slot-booking-service) CI 绿灯 | ~~0.5h~~ |
+| **S8b 候选演示** | 11-22（日）2h | 候补端到端：取消 → 补位 → 5 分钟 hold 释放 | 一条龙能演示 | 2h |
+| **S8c outbox 投递** | 11-28（六）2h | 把 outbox 表里未发布的事件投到 Redis Stream | 杀掉消费者重启能补消费 | 2h |
+| **S9 简历** | 11-29（日）2h | 用第 1 节的数字改写简历条目 + 准备 5 个追问 | — | 2h |
+
+剩下三件，按性价比排：**S8a 推 GitHub（半小时，必须有）> S9 简历 > S8b 候补演示 > S8c outbox**。
+Outbox 可以只讲不实现——面试问"发通知失败怎么办"，能说出"事务性发件箱 + 至少一次投递 + 消费端幂等"
+就够了，不必真跑通。
+
+---
+
+## 5. 运行方式
 
 ```bash
 docker compose up -d && uv run alembic upgrade head
@@ -156,7 +190,7 @@ docker start slot-booking-db slot-booking-redis
 
 ---
 
-## 5. 今天踩的坑（都已修，面试可讲）
+## 6. 今天踩的坑（都已修，面试可讲）
 
 | # | 现象 | 根因 | 修法 |
 | --- | --- | --- | --- |
@@ -176,7 +210,7 @@ docker start slot-booking-db slot-booking-redis
 
 ---
 
-## 6. 简历口径（只用第 1 节的数字）
+## 7. 简历口径（只用第 1 节的数字）
 
 > 多资源时段预约服务（FastAPI / PostgreSQL / Redis）：把「同一资源同一时段只成交一次」
 > 从应用层判断下沉为 PostgreSQL 排他约束（`EXCLUDE USING gist` + 部分索引），

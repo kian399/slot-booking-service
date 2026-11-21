@@ -1,5 +1,10 @@
 # 本地开发只需要两个依赖：PostgreSQL 16（排他约束要 btree_gist）和 Redis 7（延迟队列）
 # 端口特意错开项目 A（短链服务用 5432/6379），两个项目可以同时起。
+#
+# 观测栈是可选 profile：
+#   docker compose up -d                      # 只起 db + redis
+#   docker compose --profile observability up -d
+#   → Prometheus http://localhost:9090，Grafana http://localhost:3000 (admin/admin)
 services:
   db:
     image: postgres:16-alpine
@@ -30,6 +35,35 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: slot-booking-prometheus
+    profiles: ["observability"]
+    # 容器里要访问宿主机上跑的 uvicorn（:8001），Linux 下 host.docker.internal 不自带
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: slot-booking-grafana
+    profiles: ["observability"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
 volumes:
   slot_pgdata:
