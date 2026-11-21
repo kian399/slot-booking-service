@@ -22,9 +22,6 @@
 | **候补端到端** | ✅ `scripts/demo_waitlist.py` 已跑通（取消即补位） |
 | **Outbox 投递** | ✅ `app/services/outbox_worker.py` + `scripts/demo_outbox.py` |
 | 简历改写 | ✅ `桌面/软件工程师简历-优化版.docx` |
-| **候补端到端** | ✅ `scripts/demo_waitlist.py` 已跑通（取消即补位） |
-| **Outbox 投递** | ✅ `app/services/outbox_worker.py` + `scripts/demo_outbox.py` |
-| 简历改写 | ✅ `桌面/软件工程师简历-优化版.docx` |
 
 原计划两周的 S1~S3（打通真库 + 调通压测 + 出数据）在 11-19 一天内完成；
 S5 对账当天补完；11-21 补了 S4（git 仓库）、S7（Grafana）和 README。
