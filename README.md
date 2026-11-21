@@ -53,6 +53,8 @@ uv run uvicorn app.main:app --port 8001 --reload
 uv run pytest                    # 58 条单测，不需要数据库
 uv run pytest -m integration -v  # 25 条，跑在真实 PostgreSQL 上
 uv run python scripts/reconcile.py        # 订单/流水对账，账平退出码 0
+uv run python scripts/demo_waitlist.py    # 候补端到端：抢不到 → 排队 → 取消 → 自动补位
+uv run python scripts/demo_outbox.py      # 发件箱：事件不丢、可能重复、消费端去重
 uv run python bench/run_all_groups.py     # A~E 五组对照压测
 ```
 

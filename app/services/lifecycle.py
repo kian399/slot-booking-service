@@ -244,6 +244,26 @@ def cancel(
         tier=tier,
         reason=reason,
     )
+
+    # 释放即补位：从档期里退出来的时段应该立刻给队首候补者，
+    # 而不是等他自己发现再抢一次。补位失败（没人排队/已被抢走）不影响取消本身。
+    from app.services import waitlist  # 局部导入避免循环依赖
+
+    resource_id, start_at, end_at = booking.resource_id, booking.start_at, booking.end_at
+    try:
+        promoted = waitlist.offer_next(
+            db,
+            resource_id=resource_id,
+            start_at=start_at,
+            end_at=end_at,
+            now=now,
+        )
+        if promoted is not None:
+            logger.info("waitlist_promoted_after_cancel", new_booking_id=promoted.id)
+    except Exception:  # noqa: BLE001 补位是增值动作，不能因为它失败而回滚取消
+        db.rollback()
+        logger.warning("waitlist_promote_failed", booking_id=booking_id, exc_info=True)
+
     return db.get(Booking, booking_id)
 
 

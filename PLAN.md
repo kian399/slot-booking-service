@@ -19,6 +19,9 @@
 | CI（GitHub Actions） | ✅ **已推 GitHub，lint + test 全绿（27s，PG service 跑通 25 条集成）** |
 | **Grafana 观测栈** | ✅ **6 块面板，指标链路已验通（见第 3 节）** |
 | README | ✅ 已补（投简历必需） |
+| **候补端到端** | ✅ `scripts/demo_waitlist.py` 已跑通（取消即补位） |
+| **Outbox 投递** | ✅ `app/services/outbox_worker.py` + `scripts/demo_outbox.py` |
+| 简历改写 | ✅ `桌面/软件工程师简历-优化版.docx` |
 
 原计划两周的 S1~S3（打通真库 + 调通压测 + 出数据）在 11-19 一天内完成；
 S5 对账当天补完；11-21 补了 S4（git 仓库）、S7（Grafana）和 README。
@@ -155,8 +158,8 @@ docker compose --profile observability up -d
 | ~~S7 Grafana~~ | ~~11-29~~ | ~~四块面板~~ | ✅ 6 块面板已验通 | ~~3h~~ |
 | ~~README~~ | ~~12-06~~ | ~~项目门面~~ | ✅ 已补 | ~~1h~~ |
 | ~~S8a 推 GitHub~~ | ~~11-21~~ | ~~建仓库 + push~~ | ✅ [kian399/slot-booking-service](https://github.com/kian399/slot-booking-service) CI 绿灯 | ~~0.5h~~ |
-| **S8b 候选演示** | 11-22（日）2h | 候补端到端：取消 → 补位 → 5 分钟 hold 释放 | 一条龙能演示 | 2h |
-| **S8c outbox 投递** | 11-28（六）2h | 把 outbox 表里未发布的事件投到 Redis Stream | 杀掉消费者重启能补消费 | 2h |
+| ~~S8b 候补演示~~ | ~~11-22~~ | ~~取消 → 补位 → 5 分钟 hold~~ | ✅ 已跑通 | ~~2h~~ |
+| ~~S8c outbox 投递~~ | ~~11-28~~ | ~~outbox → Redis Stream~~ | ✅ 已跑通（至少一次 + 消费幂等） | ~~2h~~ |
 | **S9 简历** | 11-29（日）2h | 用第 1 节的数字改写简历条目 + 准备 5 个追问 | — | 2h |
 
 剩下三件，按性价比排：**S8a 推 GitHub（半小时，必须有）> S9 简历 > S8b 候补演示 > S8c outbox**。

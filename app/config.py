@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     EXPIRY_SWEEP_ENABLED: bool = True
     EXPIRY_SWEEP_INTERVAL: float = 60.0
 
+    # 事务性发件箱投递（outbox → Redis Stream）
+    OUTBOX_WORKER_ENABLED: bool = True
+
     METRICS_ENABLED: bool = True
 
 

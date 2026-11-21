@@ -21,9 +21,11 @@ from app import metrics
 from app.config import settings
 from app.db import SessionLocal
 from app.models import Booking
-from app.services import delay_queue, lifecycle, waitlist
+from app.services import delay_queue, lifecycle, outbox_worker, waitlist
 
 logger = structlog.get_logger(__name__)
+
+outbox_loop = outbox_worker.outbox_loop
 
 
 def run_expiry_once(batch_size: int | None = None) -> int:
@@ -114,6 +116,9 @@ async def lifespan_tasks(app):  # noqa: ARG001 FastAPI 会把 app 实例传进�
         tasks.append(asyncio.create_task(expiry_loop(), name="expiry_loop"))
     if settings.EXPIRY_SWEEP_ENABLED:
         tasks.append(asyncio.create_task(sweep_loop(), name="sweep_loop"))
+    if settings.OUTBOX_WORKER_ENABLED:
+        # 事务性发件箱的投递器：把 outbox 表里未发布的事件推到 Redis Stream
+        tasks.append(asyncio.create_task(outbox_loop(), name="outbox_loop"))
     logger.info("background_tasks_started", count=len(tasks))
     try:
         yield
