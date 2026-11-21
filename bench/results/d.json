@@ -1,0 +1,15 @@
+{
+  "group": "D",
+  "strategy": "排他约束",
+  "rounds": 12,
+  "concurrency": 32,
+  "requests": 384,
+  "ok_201": 12,
+  "conflict_409": 372,
+  "errors": 0,
+  "qps": 244.1,
+  "p50_ms": 89.9,
+  "p95_ms": 135.5,
+  "p99_ms": 166.2,
+  "oversold_rounds": 0
+}

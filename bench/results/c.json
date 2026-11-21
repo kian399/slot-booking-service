@@ -1,0 +1,15 @@
+{
+  "group": "C",
+  "strategy": "乐观锁 version + 重试",
+  "rounds": 12,
+  "concurrency": 32,
+  "requests": 384,
+  "ok_201": 384,
+  "conflict_409": 0,
+  "errors": 0,
+  "qps": 70.1,
+  "p50_ms": 248.2,
+  "p95_ms": 436.3,
+  "p99_ms": 531.6,
+  "oversold_rounds": 12
+}

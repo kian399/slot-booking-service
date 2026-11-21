@@ -1,0 +1,50 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install deps
+        run: uv sync
+      - name: Ruff
+        run: uv run ruff check .
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: slot
+          POSTGRES_PASSWORD: slot
+          POSTGRES_DB: slot_booking
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U slot -d slot_booking"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      # 集成测试用真 PG：排他约束在 SQLite 上不存在，mock 出来的绿灯没有意义
+      DATABASE_URL: postgresql+psycopg2://slot:slot@localhost:5432/slot_booking
+      REDIS_URL: redis://localhost:6379/0
+      EXPIRY_WORKER_ENABLED: "false" # 测试里手动调 expire_one，不要后台并发抢
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Unit tests
+        run: uv run pytest -v
+      - name: Integration tests (real PostgreSQL)
+        run: uv run pytest -m integration -v

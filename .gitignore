@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# uv.lock 必须提交：锁住依赖版本，CI 和本机跑出来的才能是同一套东西。
+# bench/results/*.json 也提交：那是简历数字的唯一证据，不能"跑完就丢"。

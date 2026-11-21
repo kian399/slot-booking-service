@@ -1,0 +1,15 @@
+{
+  "group": "E",
+  "strategy": "Redis 锁 + 排他约束",
+  "rounds": 12,
+  "concurrency": 32,
+  "requests": 384,
+  "ok_201": 12,
+  "conflict_409": 372,
+  "errors": 0,
+  "qps": 116.9,
+  "p50_ms": 165.0,
+  "p95_ms": 357.8,
+  "p99_ms": 491.9,
+  "oversold_rounds": 0
+}

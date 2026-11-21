@@ -1,0 +1,10 @@
+[
+  {
+    "group": "RELEASE",
+    "inserted": 3000,
+    "elapsed_s": 54.39,
+    "throughput_per_s": 55.2,
+    "leftover": 91,
+    "note": "rounds=3 每轮 1000 单；leftover=0 表示没有卡在 pending_payment 的残留"
+  }
+]

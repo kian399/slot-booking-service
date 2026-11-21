@@ -1,0 +1,15 @@
+{
+  "group": "A",
+  "strategy": "先查后插（无保护）",
+  "rounds": 12,
+  "concurrency": 32,
+  "requests": 384,
+  "ok_201": 39,
+  "conflict_409": 345,
+  "errors": 0,
+  "qps": 234.6,
+  "p50_ms": 88.7,
+  "p95_ms": 150.1,
+  "p99_ms": 169.3,
+  "oversold_rounds": 12
+}

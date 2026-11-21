@@ -1,0 +1,63 @@
+[project]
+name = "slot-booking-service"
+version = "0.1.0"
+description = "多资源时段预约服务：用数据库排他约束保证「同一资源同一时段只成交一次」"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20.0",
+    "fastapi>=0.143.3",
+    "psycopg2-binary>=2.9.13",
+    "pydantic-settings>=2.16.0",
+    "redis>=8.1.0",
+    "sqlalchemy>=2.1.5",
+    "structlog>=26.1.0",
+    # Windows 和 python:*-slim 镜像都没有系统时区库，zoneinfo 会直接抛
+    # ZoneInfoNotFoundError: 'Asia/Shanghai'。这个包是硬依赖，不是可选项。
+    "tzdata>=2025.2",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
+
+# 这是一个可运行的应用，不是要发布的库：不需要构建自身，只要把依赖装进 .venv。
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "fakeredis>=2.40.0",
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "integration: 需要真实 PostgreSQL（docker compose up -d db）",
+]
+addopts = "-m 'not integration'"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "B008",
+    # timezone.utc 意图更明确，也和项目 A 保持一致；不做成 UTC 单例的机械替换
+    "UP017",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 迁移是样板代码，长行（server_default / 约束定义）可读性比长度重要
+"alembic/versions/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
